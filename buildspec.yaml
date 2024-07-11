@@ -1,0 +1,36 @@
+version: 0.2
+
+
+env:
+  parameter-store:
+    DOCKER_REGISTRY_USERNAME: /cloud-cicd/docker-credentials/username
+    DOCKER_REGISTRY_PASSWORD: /cloud-cicd/docker-credentials/password
+    DOCKER_REGISTRY_URL: /cloud-cicd/docker-registry/url
+
+phases:
+  install:
+    commands:
+      - sudo apt-get update -y
+      - sudo apt-get install maven
+  pre_build:
+    commands:
+      - mvn clean install
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/javanew:latest" .
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/javanew:latest"
+   
+artifacts:
+  files:
+    - "**/*"
+    
